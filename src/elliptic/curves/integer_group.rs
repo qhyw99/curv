@@ -1,66 +1,78 @@
 use crate::{BigInt, ErrorKey};
-use std::ops::{Add,Mul};
+use std::ops::{Add, Mul, Sub, MulAssign};
 use crate::elliptic::curves::traits::{ECScalar, ECPoint};
 use p256::Scalar;
+use crate::arithmetic::traits::Samplable;
 
-pub struct Zqg{
-    g:BigInt,
-    q:BigInt,
+#[macro_use]
+extern crate lazy_static;
+lazy_static! {
+pub static ref Q:BigInt = {
+    let mut lbslice: [u8; 256] = [0xff as u8; 256];
+    lbslice[0] = 0x7f;
+    let lb = BigInt::from(&lbslice[..]);
+    lb.nextprime()
+   };
 }
-pub struct Zqf{
-    f:BigInt,
-    q:BigInt,
+#[derive(Clone, Copy)]
+pub struct Zqg {
+    g: BigInt,
 }
+
+#[derive(Clone, Copy)]
+pub struct Zqf {
+    f: BigInt,
+}
+
 pub type GE = Zqg;
 pub type FE = Zqf;
 
-impl ECScalar for Zqf{
+impl ECScalar for Zqf {
     type SecretKey = BigInt;
 
     fn new_random() -> Self {
-        unimplemented!()
+        Zqf { f: BigInt::sample_below(&FE::q()) }
     }
 
     fn zero() -> Self {
-        unimplemented!()
+        Zqf { f: BigInt::zero() }
     }
 
     fn get_element(&self) -> Self::SecretKey {
-        unimplemented!()
+        *self.f
     }
 
     fn set_element(&mut self, element: Self::SecretKey) {
-        unimplemented!()
+        self.f = element
     }
 
     fn from(n: &BigInt) -> Self {
-        unimplemented!()
+        Zqf { f: n.clone() }
     }
 
     fn to_big_int(&self) -> BigInt {
-        unimplemented!()
+        self.get_element()
     }
 
-    fn q() -> BigInt {
-        unimplemented!()
-    }
+    fn q() -> BigInt { *Q }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
-        unimplemented!()
+        Zqf { f: self.f.add(other) }
     }
 
     fn mul(&self, other: &Self::SecretKey) -> Self {
-        unimplemented!()
+        Zqf { f: self.f.mul(other) }
     }
 
     fn sub(&self, other: &Self::SecretKey) -> Self {
-        unimplemented!()
+        Zqf { f: self.f.sub(other) }
     }
 
     fn invert(&self) -> Self {
-        unimplemented!()
+        Zqf { f: self.f.invert(&Self::q()).unwrap() }
     }
 }
+
 impl Mul<Zqf> for Zqf {
     type Output = Zqf;
     fn mul(self, other: Zqf) -> Zqf {
@@ -88,13 +100,14 @@ impl<'o> Add<&'o Zqf> for Zqf {
         (&self).add(&other.get_element())
     }
 }
+
 impl PartialEq for Zqf {
     fn eq(&self, other: &Zqf) -> bool {
         self.get_element() == other.get_element()
     }
 }
 
-impl ECPoint for Zqg{
+impl ECPoint for Zqg {
     type SecretKey = BigInt;
     type PublicKey = BigInt;
     type Scalar = Zqf;
@@ -104,19 +117,19 @@ impl ECPoint for Zqg{
     }
 
     fn generator() -> Self {
-        unimplemented!()
+        Zqg { g: BigInt::one() }
     }
 
     fn get_element(&self) -> Self::PublicKey {
-        unimplemented!()
+        *self.g
     }
 
     fn x_coor(&self) -> Option<BigInt> {
-        unimplemented!()
+        Some(*self.g)
     }
 
     fn y_coor(&self) -> Option<BigInt> {
-        unimplemented!()
+        Some(*self.g)
     }
 
     fn bytes_compressed_to_big_int(&self) -> BigInt {
@@ -132,15 +145,15 @@ impl ECPoint for Zqg{
     }
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
-        unimplemented!()
+        Zqg { g: *self.g * fe }
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
-        unimplemented!()
+        Zqg { g: self.g.add(other) }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        unimplemented!()
+        Zqg { g: self.g.sub(other) }
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
@@ -189,6 +202,7 @@ impl<'o> Add<&'o Zqg> for &'o Zqg {
         self.add_point(&other.get_element())
     }
 }
+
 impl PartialEq for Zqg {
     fn eq(&self, other: &Zqg) -> bool {
         self.get_element() == other.get_element()
