@@ -1,12 +1,19 @@
 use crate::{BigInt, ErrorKey};
-use std::ops::{Add, Mul, Sub, MulAssign};
+use std::ops::{Add, Mul, Sub};
 use crate::elliptic::curves::traits::{ECScalar, ECPoint};
-use p256::Scalar;
 use crate::arithmetic::traits::Samplable;
+use std::borrow::Cow;
 
-#[macro_use]
-extern crate lazy_static;
-lazy_static! {
+#[derive(Clone)]
+pub struct Zqg {
+    g: BigInt,
+}
+
+#[derive(Clone)]
+pub struct Zqf {
+    f: BigInt,
+}
+lazy_static::lazy_static! {
 pub static ref Q:BigInt = {
     let mut lbslice: [u8; 256] = [0xff as u8; 256];
     lbslice[0] = 0x7f;
@@ -14,21 +21,11 @@ pub static ref Q:BigInt = {
     lb.nextprime()
    };
 }
-#[derive(Clone, Copy)]
-pub struct Zqg {
-    g: BigInt,
-}
-
-#[derive(Clone, Copy)]
-pub struct Zqf {
-    f: BigInt,
-}
-
 pub type GE = Zqg;
 pub type FE = Zqf;
 
 impl ECScalar for Zqf {
-    type SecretKey = BigInt;
+    type SecretKey = Cow<'static, Zqf>;
 
     fn new_random() -> Self {
         Zqf { f: BigInt::sample_below(&FE::q()) }
@@ -38,12 +35,12 @@ impl ECScalar for Zqf {
         Zqf { f: BigInt::zero() }
     }
 
-    fn get_element(&self) -> Self::SecretKey {
-        *self.f
+    fn get_element(&'static self) -> Self::SecretKey {
+        Cow::Borrowed(self)
     }
 
     fn set_element(&mut self, element: Self::SecretKey) {
-        self.f = element
+        self.f = element.into_owned().f;
     }
 
     fn from(n: &BigInt) -> Self {
@@ -51,7 +48,7 @@ impl ECScalar for Zqf {
     }
 
     fn to_big_int(&self) -> BigInt {
-        self.get_element()
+        self.get_element().into_owned().f
     }
 
     fn q() -> BigInt { *Q }
@@ -76,28 +73,32 @@ impl ECScalar for Zqf {
 impl Mul<Zqf> for Zqf {
     type Output = Zqf;
     fn mul(self, other: Zqf) -> Zqf {
-        (&self).mul(&other.get_element())
+        self.f.mul(other.f);
+        self
     }
 }
 
 impl<'o> Mul<&'o Zqf> for Zqf {
     type Output = Zqf;
     fn mul(self, other: &'o Zqf) -> Zqf {
-        (&self).mul(&other.get_element())
+        self.f.mul(other.to_big_int());
+        self
     }
 }
 
 impl Add<Zqf> for Zqf {
     type Output = Zqf;
     fn add(self, other: Zqf) -> Zqf {
-        (&self).add(&other.get_element())
+        self.f.add(other.f);
+        self
     }
 }
 
 impl<'o> Add<&'o Zqf> for Zqf {
     type Output = Zqf;
     fn add(self, other: &'o Zqf) -> Zqf {
-        (&self).add(&other.get_element())
+        self.f.add(other.to_big_int());
+        self
     }
 }
 
@@ -108,8 +109,8 @@ impl PartialEq for Zqf {
 }
 
 impl ECPoint for Zqg {
-    type SecretKey = BigInt;
-    type PublicKey = BigInt;
+    type SecretKey = Cow<'static, Zqf>;
+    type PublicKey = Cow<'static, Zqg>;
     type Scalar = Zqf;
 
     fn base_point2() -> Self {
@@ -120,8 +121,8 @@ impl ECPoint for Zqg {
         Zqg { g: BigInt::one() }
     }
 
-    fn get_element(&self) -> Self::PublicKey {
-        *self.g
+    fn get_element(&'static self) -> Self::PublicKey {
+        Cow::Borrowed(self)
     }
 
     fn x_coor(&self) -> Option<BigInt> {
@@ -145,7 +146,7 @@ impl ECPoint for Zqg {
     }
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
-        Zqg { g: *self.g * fe }
+        Zqg { g: *self.g * fe.to_big_int() }
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
@@ -164,21 +165,21 @@ impl ECPoint for Zqg {
 impl Mul<Zqf> for Zqg {
     type Output = Zqg;
     fn mul(self, other: Zqf) -> Zqg {
-        self.scalar_mul(&other.get_element())
+        self.scalar_mul(&Cow::Owned(other))
     }
 }
 
 impl<'o> Mul<&'o Zqf> for Zqg {
     type Output = Zqg;
     fn mul(self, other: &'o Zqf) -> Zqg {
-        self.scalar_mul(&other.get_element())
+        self.scalar_mul(&Cow::Borrowed(other))
     }
 }
 
 impl<'o> Mul<&'o Zqf> for &'o Zqg {
     type Output = Zqg;
     fn mul(self, other: &'o Zqf) -> Zqg {
-        self.scalar_mul(&other.get_element())
+        self.scalar_mul(&Cow::Borrowed(other))
     }
 }
 
@@ -206,5 +207,19 @@ impl<'o> Add<&'o Zqg> for &'o Zqg {
 impl PartialEq for Zqg {
     fn eq(&self, other: &Zqg) -> bool {
         self.get_element() == other.get_element()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::BigInt;
+
+    #[test]
+    fn test_zqf_mul() {
+        let zqf1 = BigInt::from(99u64);
+        let zqf2 = BigInt::from(100u64);
+        let zqf3 = zqf1 * zqf2;
+        assert!(zqf3, BigInt::from(9900u64));
+        //println!("{}",zqf1)
     }
 }
