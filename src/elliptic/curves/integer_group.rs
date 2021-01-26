@@ -147,15 +147,15 @@ impl ECPoint for Zqg {
     }
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
-        Zqg { g: *self.g * fe.to_big_int() }
+        Zqg { g: self.clone().g * fe.to_big_int() }
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: self.g.add(other) }
+        Zqg { g: self.g.add(&other.g) }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: self.g.sub(other) }
+        Zqg { g: self.g.sub(&other.g) }
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
@@ -181,7 +181,7 @@ impl<'o> Mul<&'o Zqf> for Zqg {
 impl Add<Zqg> for Zqg {
     type Output = Zqg;
     fn add(mut self, other: Zqg) -> Zqg {
-        self.g = self.g + other.f;
+        self.g = self.g + other.g;
         self
     }
 }
