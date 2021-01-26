@@ -26,7 +26,7 @@ pub type GE = Zqg;
 pub type FE = Zqf;
 
 impl ECScalar for Zqf {
-    type SecretKey = Rc<Cow<'_, Zqf>>;
+    type SecretKey = Zqf;
 
     fn new_random() -> Self {
         Zqf { f: BigInt::sample_below(&FE::q()) }
@@ -37,11 +37,11 @@ impl ECScalar for Zqf {
     }
 
     fn get_element(&self) -> Self::SecretKey {
-        Rc::new(Cow::Borrowed(self))
+        self.clone()
     }
 
     fn set_element(&mut self, element: Self::SecretKey) {
-        self.f = element.into_owned().f;
+        self.f = element.f;
     }
 
     fn from(n: &BigInt) -> Self {
@@ -49,7 +49,7 @@ impl ECScalar for Zqf {
     }
 
     fn to_big_int(&self) -> BigInt {
-        self.get_element().into_owned().f
+        self.get_element().f
     }
 
     fn q() -> BigInt { *Q }
@@ -82,7 +82,7 @@ impl Mul<Zqf> for Zqf {
 impl<'o> Mul<&'o Zqf> for Zqf {
     type Output = Zqf;
     fn mul(self, other: &'o Zqf) -> Zqf {
-        self.f.mul(other.to_big_int());
+        self.f.mul(&other.f);
         self
     }
 }
@@ -98,7 +98,7 @@ impl Add<Zqf> for Zqf {
 impl<'o> Add<&'o Zqf> for Zqf {
     type Output = Zqf;
     fn add(self, other: &'o Zqf) -> Zqf {
-        self.f.add(other.to_big_int());
+        self.f.add(&other.f);
         self
     }
 }
@@ -110,8 +110,8 @@ impl PartialEq for Zqf {
 }
 
 impl ECPoint for Zqg {
-    type SecretKey = Cow<'_, Zqf>;
-    type PublicKey = Cow<'_, Zqg>;
+    type SecretKey = Zqf;
+    type PublicKey = Zqg;
     type Scalar = Zqf;
 
     fn base_point2() -> Self {
@@ -123,7 +123,7 @@ impl ECPoint for Zqg {
     }
 
     fn get_element(&self) -> Self::PublicKey {
-        Cow::Borrowed(self)
+        self.clone()
     }
 
     fn x_coor(&self) -> Option<BigInt> {
@@ -165,29 +165,31 @@ impl ECPoint for Zqg {
 
 impl Mul<Zqf> for Zqg {
     type Output = Zqg;
-    fn mul(self, other: Zqf) -> Zqg {
-        self.scalar_mul(&Cow::Owned(other))
+    fn mul(mut self, other: Zqf) -> Zqg {
+        self.g = self.g * other.f;
+        self
     }
 }
 
 impl<'o> Mul<&'o Zqf> for Zqg {
     type Output = Zqg;
     fn mul(self, other: &'o Zqf) -> Zqg {
-        self.scalar_mul(&Cow::Borrowed(other))
+        self.scalar_mul(&other)
+    }
+}
+
+impl Add<Zqg> for Zqg {
+    type Output = Zqg;
+    fn add(mut self, other: Zqg) -> Zqg {
+        self.g = self.g + other.f;
+        self
     }
 }
 
 impl<'o> Mul<&'o Zqf> for &'o Zqg {
     type Output = Zqg;
     fn mul(self, other: &'o Zqf) -> Zqg {
-        self.scalar_mul(&Cow::Borrowed(other))
-    }
-}
-
-impl Add<Zqg> for Zqg {
-    type Output = Zqg;
-    fn add(self, other: Zqg) -> Zqg {
-        self.add_point(&other.get_element())
+        self.scalar_mul(&other)
     }
 }
 
