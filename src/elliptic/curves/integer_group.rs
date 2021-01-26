@@ -157,11 +157,11 @@ impl ECPoint for Zqg {
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: self.g.add(&other.g) }
+        Zqg { g: self.clone().g.add(&other.g) }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: self.g.sub(&other.g) }
+        Zqg { g: self.clone().g.sub(&other.g) }
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
