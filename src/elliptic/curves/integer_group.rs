@@ -61,15 +61,15 @@ impl ECScalar for Zqf {
     fn q() -> BigInt { Q.clone() }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: self.f.add(&other.f) }
+        self.clone().add(other)
     }
 
     fn mul(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: self.f.mul(&other.f) }
+        self.clone().mul(other)
     }
 
     fn sub(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: self.f.sub(&other.f) }
+        Zqf { f: self.clone().f.sub(&other.f) }
     }
 
     fn invert(&self) -> Self {
