@@ -14,20 +14,20 @@ pub struct Zqg {
 pub struct Zqf {
     f: BigInt,
 }
-// lazy_static::lazy_static! {
+lazy_static::lazy_static! {
+pub static ref Q:BigInt = {
+    let mut lbslice: [u8; 256] = [0xff as u8; 256];
+    lbslice[0] = 0x7f;
+    let lb = BigInt::from(&lbslice[..]);
+    lb.nextprime()
+   };
+}
 // pub const Q:BigInt = {
 //     let mut lbslice: [u8; 256] = [0xff as u8; 256];
 //     lbslice[0] = 0x7f;
 //     let lb = BigInt::from(&lbslice[..]);
 //     lb.nextprime()
-//    };
-// }
-pub const Q:BigInt = {
-    let mut lbslice: [u8; 256] = [0xff as u8; 256];
-    lbslice[0] = 0x7f;
-    let lb = BigInt::from(&lbslice[..]);
-    lb.nextprime()
-};
+// };
 pub type GE = Zqg;
 pub type FE = Zqf;
 
@@ -58,7 +58,7 @@ impl ECScalar for Zqf {
         self.get_element().f
     }
 
-    fn q() -> BigInt { Q }
+    fn q() -> BigInt { Q.clone() }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
         Zqf { f: self.f.add(&other.f) }
