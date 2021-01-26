@@ -55,15 +55,15 @@ impl ECScalar for Zqf {
     fn q() -> BigInt { *Q }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: self.f.add(other) }
+        Zqf { f: self.f.add(&other.f) }
     }
 
     fn mul(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: self.f.mul(other) }
+        Zqf { f: self.f.mul(&other.f) }
     }
 
     fn sub(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: self.f.sub(other) }
+        Zqf { f: self.f.sub(&other.f) }
     }
 
     fn invert(&self) -> Self {
@@ -127,11 +127,11 @@ impl ECPoint for Zqg {
     }
 
     fn x_coor(&self) -> Option<BigInt> {
-        Some(*self.g)
+        Some(self.clone().g)
     }
 
     fn y_coor(&self) -> Option<BigInt> {
-        Some(*self.g)
+        Some(self.clone().g)
     }
 
     fn bytes_compressed_to_big_int(&self) -> BigInt {
