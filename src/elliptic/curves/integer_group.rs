@@ -3,6 +3,7 @@ use std::ops::{Add, Mul, Sub};
 use crate::elliptic::curves::traits::{ECScalar, ECPoint};
 use crate::arithmetic::traits::Samplable;
 use std::borrow::Cow;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Zqg {
@@ -25,7 +26,7 @@ pub type GE = Zqg;
 pub type FE = Zqf;
 
 impl ECScalar for Zqf {
-    type SecretKey = Cow<'static, Zqf>;
+    type SecretKey = Rc<Cow<'_, Zqf>>;
 
     fn new_random() -> Self {
         Zqf { f: BigInt::sample_below(&FE::q()) }
@@ -35,8 +36,8 @@ impl ECScalar for Zqf {
         Zqf { f: BigInt::zero() }
     }
 
-    fn get_element(&'static self) -> Self::SecretKey {
-        Cow::Borrowed(self)
+    fn get_element(&self) -> Self::SecretKey {
+        Rc::new(Cow::Borrowed(self))
     }
 
     fn set_element(&mut self, element: Self::SecretKey) {
@@ -109,8 +110,8 @@ impl PartialEq for Zqf {
 }
 
 impl ECPoint for Zqg {
-    type SecretKey = Cow<'static, Zqf>;
-    type PublicKey = Cow<'static, Zqg>;
+    type SecretKey = Cow<'_, Zqf>;
+    type PublicKey = Cow<'_, Zqg>;
     type Scalar = Zqf;
 
     fn base_point2() -> Self {
@@ -121,7 +122,7 @@ impl ECPoint for Zqg {
         Zqg { g: BigInt::one() }
     }
 
-    fn get_element(&'static self) -> Self::PublicKey {
+    fn get_element(&self) -> Self::PublicKey {
         Cow::Borrowed(self)
     }
 
