@@ -2,8 +2,6 @@ use crate::{BigInt, ErrorKey};
 use std::ops::{Add, Mul, Sub, MulAssign, AddAssign};
 use crate::elliptic::curves::traits::{ECScalar, ECPoint};
 use crate::arithmetic::traits::Samplable;
-use std::borrow::Cow;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct Zqg {
@@ -22,12 +20,6 @@ pub static ref Q:BigInt = {
     lb.nextprime()
    };
 }
-// pub const Q:BigInt = {
-//     let mut lbslice: [u8; 256] = [0xff as u8; 256];
-//     lbslice[0] = 0x7f;
-//     let lb = BigInt::from(&lbslice[..]);
-//     lb.nextprime()
-// };
 pub type GE = Zqg;
 pub type FE = Zqf;
 
