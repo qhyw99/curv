@@ -222,7 +222,7 @@ mod tests {
         let zqf1 = BigInt::from(99u64);
         let zqf2 = BigInt::from(100u64);
         let zqf3 = zqf1 * zqf2;
-        assert!(zqf3, BigInt::from(9900u64));
+        assert_eq!(zqf3, BigInt::from(9900u64));
         //println!("{}",zqf1)
     }
 }
