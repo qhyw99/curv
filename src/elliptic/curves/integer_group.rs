@@ -1,5 +1,5 @@
 use crate::{BigInt, ErrorKey};
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, MulAssign, AddAssign};
 use crate::elliptic::curves::traits::{ECScalar, ECPoint};
 use crate::arithmetic::traits::Samplable;
 use std::borrow::Cow;
@@ -79,29 +79,33 @@ impl ECScalar for Zqf {
 
 impl Mul<Zqf> for Zqf {
     type Output = Zqf;
-    fn mul(self, other: Zqf) -> Zqf {
-        self.f.mul(other.f)
+    fn mul(mut self, other: Zqf) -> Zqf {
+        self.f.mul_assign(other.f);
+        self
     }
 }
 
 impl<'o> Mul<&'o Zqf> for Zqf {
     type Output = Zqf;
-    fn mul(self, other: &'o Zqf) -> Zqf {
-        self.f.mul(&other.f)
+    fn mul(mut self, other: &'o Zqf) -> Zqf {
+        self.f.mul_assign(&other.f);
+        self
     }
 }
 
 impl Add<Zqf> for Zqf {
     type Output = Zqf;
-    fn add(self, other: Zqf) -> Zqf {
-        self.f.add(other.f)
+    fn add(mut self, other: Zqf) -> Zqf {
+        self.f.add_assign(other.f);
+        self
     }
 }
 
 impl<'o> Add<&'o Zqf> for Zqf {
     type Output = Zqf;
-    fn add(self, other: &'o Zqf) -> Zqf {
-        self.f.add(&other.f)
+    fn add(mut self, other: &'o Zqf) -> Zqf {
+        self.f.add_assign(&other.f);
+        self
     }
 }
 
