@@ -80,32 +80,28 @@ impl ECScalar for Zqf {
 impl Mul<Zqf> for Zqf {
     type Output = Zqf;
     fn mul(self, other: Zqf) -> Zqf {
-        self.f.mul(other.f);
-        self
+        self.f.mul(other.f)
     }
 }
 
 impl<'o> Mul<&'o Zqf> for Zqf {
     type Output = Zqf;
     fn mul(self, other: &'o Zqf) -> Zqf {
-        self.f.mul(&other.f);
-        self
+        self.f.mul(&other.f)
     }
 }
 
 impl Add<Zqf> for Zqf {
     type Output = Zqf;
     fn add(self, other: Zqf) -> Zqf {
-        self.f.add(other.f);
-        self
+        self.f.add(other.f)
     }
 }
 
 impl<'o> Add<&'o Zqf> for Zqf {
     type Output = Zqf;
     fn add(self, other: &'o Zqf) -> Zqf {
-        self.f.add(&other.f);
-        self
+        self.f.add(&other.f)
     }
 }
 
