@@ -1,14 +1,17 @@
 use crate::{BigInt, ErrorKey};
 use std::ops::{Add, Mul, Sub, MulAssign, AddAssign};
 use crate::elliptic::curves::traits::{ECScalar, ECPoint};
-use crate::arithmetic::traits::Samplable;
+use crate::arithmetic::traits::{Samplable, Converter};
+use zeroize::Zeroize;
+use std::sync::atomic;
+use std::ptr;
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct Zqg {
     g: BigInt,
 }
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct Zqf {
     f: BigInt,
 }
@@ -65,6 +68,7 @@ impl ECScalar for Zqf {
     }
 
     fn invert(&self) -> Self {
+        //self.f.modulus();
         Zqf { f: self.f.invert(&Self::q()).unwrap() }
     }
 }
@@ -107,13 +111,21 @@ impl PartialEq for Zqf {
     }
 }
 
+impl Zeroize for Zqf {
+    fn zeroize(&mut self) {
+        unsafe { ptr::write_volatile(self, FE::zero()) };
+        atomic::fence(atomic::Ordering::SeqCst);
+        atomic::compiler_fence(atomic::Ordering::SeqCst);
+    }
+}
+
 impl ECPoint for Zqg {
     type SecretKey = Zqf;
     type PublicKey = Zqg;
     type Scalar = Zqf;
 
     fn base_point2() -> Self {
-        unimplemented!()
+        Zqg{ g: BigInt::from(13)}
     }
 
     fn generator() -> Self {
@@ -133,15 +145,20 @@ impl ECPoint for Zqg {
     }
 
     fn bytes_compressed_to_big_int(&self) -> BigInt {
-        unimplemented!()
+        self.g.clone()
     }
 
     fn from_bytes(bytes: &[u8]) -> Result<Self, ErrorKey> {
-        unimplemented!()
+        Ok(Zqg { g: BigInt::from(bytes) })
     }
 
     fn pk_to_key_slice(&self) -> Vec<u8> {
-        unimplemented!()
+        let mut hex_str = self.g.to_hex();
+        if (hex_str.len() % 2 != 0) {
+            unsafe { hex_str.as_mut_vec().insert(0, b'0'); }
+        }
+        hex::decode(hex_str).unwrap().to_vec()
+        //hex_str
     }
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
@@ -211,9 +228,20 @@ impl PartialEq for Zqg {
     }
 }
 
+impl Zeroize for Zqg {
+    fn zeroize(&mut self) {
+        unsafe { ptr::write_volatile(self, GE::generator()) };
+        atomic::fence(atomic::Ordering::SeqCst);
+        atomic::compiler_fence(atomic::Ordering::SeqCst);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::BigInt;
+    use super::*;
+    use crate::cryptographic_primitives::hashing::hash_sha256::HSha256;
+    use crate::cryptographic_primitives::hashing::traits::Hash;
 
     #[test]
     fn test_zqf_mul() {
@@ -222,5 +250,30 @@ mod tests {
         let zqf3 = zqf1 * zqf2;
         assert_eq!(zqf3, BigInt::from(9900u64));
         //println!("{}",zqf1)
+    }
+
+    #[test]
+    fn test_zqg_from() {
+        let zqg = Zqg{g : BigInt::from(1200u64)};
+        let vr = zqg.pk_to_key_slice();
+        println!("{:?}",vr);
+        println!("{:?}",BigInt::from(1200u64).to_hex());
+        let zqg2 = Zqg::from_bytes(vr.as_slice());
+        assert_eq!(zqg2.unwrap().g, BigInt::from(1200u64));
+        //zqg2.unwrap().eq(&zqg);
+    }
+
+    #[test]
+    fn test_zqg_base2() {
+        //println!("{:?}",Zqg::base_point2().g);
+        let point = Zqg::base_point2();
+        //let result1 = HSha256::create_hash_from_ge(&vec![&point, &Zqg::generator()]);
+        //assert!(result1.to_big_int().to_str_radix(2).len() > 240);
+        let result2 = HSha256::create_hash_from_ge(&vec![&Zqg::generator(), &point]);
+        //assert_ne!(result1, result2);
+        let result3 = HSha256::create_hash_from_ge(&vec![&Zqg::generator(), &point]);
+
+        println!("{:?} {:?}",result2,result3);
+        assert_eq!(result2, result3);
     }
 }
