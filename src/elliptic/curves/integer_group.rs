@@ -173,7 +173,7 @@ impl ECPoint for Zqg {
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: BigInt::mod_sub(&self.g, &other.f, &Self::q()) }
+        Zqg { g: BigInt::mod_sub(&self.g, &other.g, &Self::q()) }
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
