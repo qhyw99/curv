@@ -169,11 +169,11 @@ impl ECPoint for Zqg {
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: BigInt::mod_add(&self.g, &fe.f, &Self::q()) }
+        Zqg { g: BigInt::mod_add(&self.g, &other.g, &Self::q()) }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: BigInt::mod_sub(&self.g, &fe.f, &Self::q()) }
+        Zqg { g: BigInt::mod_sub(&self.g, &other.f, &Self::q()) }
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
