@@ -1,10 +1,10 @@
+use crate::arithmetic::traits::{Converter, Modulo, Samplable};
+use crate::elliptic::curves::traits::{ECPoint, ECScalar};
 use crate::{BigInt, ErrorKey};
-use std::ops::{Add, Mul, Sub, MulAssign, AddAssign};
-use crate::elliptic::curves::traits::{ECScalar, ECPoint};
-use crate::arithmetic::traits::{Samplable, Converter, Modulo};
-use zeroize::Zeroize;
-use std::sync::atomic;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 use std::ptr;
+use std::sync::atomic;
+use zeroize::Zeroize;
 
 #[derive(Clone, Debug)]
 pub struct Zqg {
@@ -24,22 +24,11 @@ pub struct Zqf {
 // lbslice[0] = 0x7f;
 lazy_static::lazy_static! {
 pub static ref Q:BigInt = {
-    let mut lbslice: [u8; 1] = [0xff as u8; 1];
+    let mut lbslice: [u8; 256] = [0xff as u8; 256];
     lbslice[0] = 0x7f;
-    let modlus = BigInt::from(4);
-    let target = BigInt::from(3);
     let mut lb = BigInt::from(&lbslice[..]);
     lb = lb.nextprime();
-    while (lb.mod_floor(&modlus) != target){
-    lb = lb.nextprime();
-    }
-    p = lb.clone();
-    lb = lb.nextprime();
-    while (lb.mod_floor(&modlus) != target){
-    lb = lb.nextprime();
-    }
-    let q = lb.clone();
-    p*q
+    lb
    };
 }
 pub type GE = Zqg;
@@ -49,7 +38,9 @@ impl ECScalar for Zqf {
     type SecretKey = Zqf;
 
     fn new_random() -> Self {
-        Zqf { f: BigInt::sample_below(&FE::q()) }
+        Zqf {
+            f: BigInt::sample_below(&FE::q()),
+        }
     }
 
     fn zero() -> Self {
@@ -72,7 +63,9 @@ impl ECScalar for Zqf {
         self.get_element().f
     }
 
-    fn q() -> BigInt { Q.clone() }
+    fn q() -> BigInt {
+        Q.clone()
+    }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
         self.clone().add(other)
@@ -83,11 +76,15 @@ impl ECScalar for Zqf {
     }
 
     fn sub(&self, other: &Self::SecretKey) -> Self {
-        Zqf { f: BigInt::mod_sub(&self.f, &other.f, &Self::q()) }
+        Zqf {
+            f: BigInt::mod_sub(&self.f, &other.f, &Self::q()),
+        }
     }
 
     fn invert(&self) -> Self {
-        Zqf { f: self.f.invert(&Self::q()).unwrap() }
+        Zqf {
+            f: self.f.invert(&Self::q()).unwrap(),
+        }
     }
 }
 
@@ -138,7 +135,9 @@ impl Zeroize for Zqf {
 }
 
 impl Zqg {
-    fn q() -> BigInt { Q.clone() }
+    fn q() -> BigInt {
+        Q.clone()
+    }
 }
 
 impl ECPoint for Zqg {
@@ -147,7 +146,9 @@ impl ECPoint for Zqg {
     type Scalar = Zqf;
 
     fn base_point2() -> Self {
-        Zqg { g: BigInt::from(13) }
+        Zqg {
+            g: BigInt::from(13),
+        }
     }
 
     fn generator() -> Self {
@@ -171,28 +172,38 @@ impl ECPoint for Zqg {
     }
 
     fn from_bytes(bytes: &[u8]) -> Result<Self, ErrorKey> {
-        Ok(Zqg { g: BigInt::from(bytes) })
+        Ok(Zqg {
+            g: BigInt::from(bytes),
+        })
     }
 
     fn pk_to_key_slice(&self) -> Vec<u8> {
         let mut hex_str = self.g.to_hex();
         if (hex_str.len() % 2 != 0) {
-            unsafe { hex_str.as_mut_vec().insert(0, b'0'); }
+            unsafe {
+                hex_str.as_mut_vec().insert(0, b'0');
+            }
         }
         hex::decode(hex_str).unwrap().to_vec()
         //hex_str
     }
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
-        Zqg { g: BigInt::mod_mul(&self.g, &fe.f, &Self::q()) }
+        Zqg {
+            g: BigInt::mod_mul(&self.g, &fe.f, &Self::q()),
+        }
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: BigInt::mod_add(&self.g, &other.g, &Self::q()) }
+        Zqg {
+            g: BigInt::mod_add(&self.g, &other.g, &Self::q()),
+        }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg { g: BigInt::mod_sub(&self.g, &other.g, &Self::q()) }
+        Zqg {
+            g: BigInt::mod_sub(&self.g, &other.g, &Self::q()),
+        }
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
@@ -262,10 +273,10 @@ impl Zeroize for Zqg {
 
 #[cfg(test)]
 mod tests {
-    use crate::BigInt;
     use super::*;
     use crate::cryptographic_primitives::hashing::hash_sha256::HSha256;
     use crate::cryptographic_primitives::hashing::traits::Hash;
+    use crate::BigInt;
 
     #[test]
     fn test_zqf_mul() {
@@ -273,12 +284,14 @@ mod tests {
         let zqf2 = BigInt::from(100u64);
         let zqf3 = zqf1 * zqf2;
         assert_eq!(zqf3, BigInt::from(9900u64));
-        println!("{:?}",Zqf::q())
+        println!("{:?}", Zqf::q())
     }
 
     #[test]
     fn test_zqg_from() {
-        let zqg = Zqg { g: BigInt::from(1200u64) };
+        let zqg = Zqg {
+            g: BigInt::from(1200u64),
+        };
         let vr = zqg.pk_to_key_slice();
         println!("{:?}", vr);
         println!("{:?}", BigInt::from(1200u64).to_hex());
