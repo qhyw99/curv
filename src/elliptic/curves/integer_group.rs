@@ -15,12 +15,31 @@ pub struct Zqg {
 pub struct Zqf {
     f: BigInt,
 }
+//2048bit
+// let mut lbslice: [u8; 256] = [0xff as u8; 256];
+// lbslice[0] = 0x7f;
+
+//128bit 64bit*64bit
+// let mut lbslice: [u8; 8] = [0xff as u8; 8];
+// lbslice[0] = 0x7f;
 lazy_static::lazy_static! {
 pub static ref Q:BigInt = {
-    let mut lbslice: [u8; 256] = [0xff as u8; 256];
+    let mut lbslice: [u8; 1] = [0xff as u8; 1];
     lbslice[0] = 0x7f;
-    let lb = BigInt::from(&lbslice[..]);
-    lb.nextprime()
+    let modlus = BigInt::from(4);
+    let target = BigInt::from(3);
+    let mut lb = BigInt::from(&lbslice[..]);
+    lb = lb.nextprime();
+    while (lb.mod_floor(&modlus) != target){
+    lb = lb.nextprime();
+    }
+    p = lb.clone();
+    lb = lb.nextprime();
+    while (lb.mod_floor(&modlus) != target){
+    lb = lb.nextprime();
+    }
+    let q = lb.clone();
+    p*q
    };
 }
 pub type GE = Zqg;
@@ -254,7 +273,7 @@ mod tests {
         let zqf2 = BigInt::from(100u64);
         let zqf3 = zqf1 * zqf2;
         assert_eq!(zqf3, BigInt::from(9900u64));
-        //println!("{}",zqf1)
+        println!("{:?}",Zqf::q())
     }
 
     #[test]
