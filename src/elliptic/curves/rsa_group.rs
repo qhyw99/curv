@@ -35,12 +35,29 @@ pub static ref p:BigInt= {
    pub static ref Phi:BigInt ={
       (p.clone()-1)*(q.clone()-1)
    };
+   pub static ref g : BigInt ={
+       Zqf::generator().f
+   };
+   pub static ref alpha : BigInt ={
+       Zqf::new_random().f
+   };
 }
 
 impl Zqf {
+    fn generator() -> Self {
+        let mut f = BigInt::sample_below(&M - 1);
+        let mut one = BigInt::from(1);
+        let mut exp = BigInt::one();
+        while one < BigInt::from(128) {
+            one = one.nextprime();
+            exp *= one.pow(10);
+        }
+        Zqf { f: f.powm(&exp, &M) }
+    }
+
     fn new_random() -> Self {
         Zqf {
-            f: BigInt::sample_below(&M),
+            f: BigInt::sample_below(&Phi - 1),
         }
     }
 
