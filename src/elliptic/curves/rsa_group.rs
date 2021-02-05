@@ -86,19 +86,19 @@ impl Zqf {
         Phi.clone()
     }
 
-    pub fn pow_mod_m(self, e: &BigInt) -> Self {
+    pub fn pow_mod_m(&self, e: &BigInt) -> Self {
         Zqf {
             f: BigInt::mod_pow(&self.f, e, &M),
         }
     }
 
-    pub fn pow_mod_phi(self, e: &BigInt) -> Self {
+    pub fn pow_mod_phi(&self, e: &BigInt) -> Self {
         Zqf {
             f: BigInt::mod_pow(&self.f, e, &Phi),
         }
     }
 
-    pub fn sqrt(self) -> Self {
+    pub fn sqrt(&self) -> Self {
         Zqf{
             f: BigInt::sqrt(&self.f).mod_floor(&M),
         }
