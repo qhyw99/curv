@@ -1,6 +1,6 @@
 use crate::arithmetic::traits::{Converter, Modulo, Samplable};
 use crate::{BigInt};
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, Div};
 use std::ptr;
 
 #[derive(Clone, Debug)]
@@ -36,28 +36,37 @@ pub static ref p:BigInt= {
       (p.clone()-1)*(q.clone()-1)
    };
    pub static ref g : BigInt ={
-       Zqf::generator().f
+       Zqf::get_element_order_without_small_divisor().f
    };
    pub static ref alpha : BigInt ={
-       Zqf::new_random().f
+       Zqf::get_random_from_z_phi().f
    };
 }
 
 impl Zqf {
-    fn generator() -> Self {
-        let mut f = BigInt::sample_below(&M - 1);
+    fn get_divisor_exp_in_phi(divisor: &BigInt) -> u32 {
+        let mut uint0 = &Phi.clone();
+        let mut i = 0;
+        while uint0.is_multiple_of(divisor) {
+            uint0 = uint0.div(divisor);
+            i += 1;
+        }
+        return i;
+    }
+    fn get_element_order_without_small_divisor() -> Self {
+        let mut f = BigInt::sample_below(&M.clone().sub(1));
         let mut one = BigInt::from(1);
         let mut exp = BigInt::one();
         while one < BigInt::from(128) {
             one = one.nextprime();
-            exp *= one.pow(10);
+            exp *= one.pow(Self::get_divisor_exp_in_phi(&one));
         }
         Zqf { f: f.powm(&exp, &M) }
     }
 
-    fn new_random() -> Self {
+    fn get_random_from_z_phi() -> Self {
         Zqf {
-            f: BigInt::sample_below(&Phi - 1),
+            f: BigInt::sample_below(&Phi.clone().sub(1)),
         }
     }
 
@@ -151,6 +160,10 @@ mod tests {
         let u = Zqf { f: zqf1 };
         let v = u.pow(&zqf2);
         println!("{:?}", v);
+
+        let gg = Zqf::get_element_order_without_small_divisor();
+        println!("{:?}", &Phi.clone());
+        println!("{:?}", gg);
         //assert_eq!(zqf3, BigInt::from(9900u64));
     }
 }
