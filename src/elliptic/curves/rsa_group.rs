@@ -79,7 +79,7 @@ impl Zqf {
     }
 
     pub fn to_big_int(&self) -> BigInt {
-        self.get_element().f
+        self.f.clone()
     }
 
     fn q() -> BigInt {
