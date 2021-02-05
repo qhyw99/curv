@@ -70,23 +70,15 @@ impl Zqf {
         }
     }
 
-    fn zero() -> Self {
+    pub fn zero() -> Self {
         Zqf { f: BigInt::zero() }
     }
 
-    fn get_element(&self) -> Self {
-        self.clone()
-    }
-
-    fn set_element(&mut self, element: Self) {
-        self.f = element.f;
-    }
-
-    fn from(n: &BigInt) -> Self {
+    pub fn from(n: &BigInt) -> Self {
         Zqf { f: n.clone() }
     }
 
-    fn to_big_int(&self) -> BigInt {
+    pub fn to_big_int(&self) -> BigInt {
         self.get_element().f
     }
 
@@ -94,7 +86,7 @@ impl Zqf {
         Phi.clone()
     }
 
-    fn pow(self, e: &BigInt) -> Self {
+    pub fn pow(self, e: &BigInt) -> Self {
         Zqf {
             f: BigInt::mod_pow(&self.f, e, &M),
         }
