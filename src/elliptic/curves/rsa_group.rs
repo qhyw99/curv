@@ -1,6 +1,6 @@
 use crate::arithmetic::traits::{Converter, Modulo, Samplable};
 use crate::{BigInt};
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, Div};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, Div, DivAssign};
 use std::ptr;
 
 #[derive(Clone, Debug)]
@@ -45,7 +45,7 @@ pub static ref p:BigInt= {
 
 impl Zqf {
     fn get_divisor_exp_in_phi(divisor: &BigInt) -> u32 {
-        let mut uint0 = &Phi.clone();
+        let mut uint0 = Phi.clone();
         let mut i = 0;
         while uint0.is_multiple_of(divisor) {
             uint0 = uint0.div(divisor);
@@ -54,7 +54,7 @@ impl Zqf {
         return i;
     }
     fn get_element_order_without_small_divisor() -> Self {
-        let mut f = BigInt::sample_below(&M.clone().sub(1));
+        let f = BigInt::sample_below(&M.clone().sub(1));
         let mut one = BigInt::from(1);
         let mut exp = BigInt::one();
         while one < BigInt::from(128) {
