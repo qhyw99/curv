@@ -42,7 +42,36 @@ pub static ref p:BigInt= {
        Zqf::get_random_from_z_phi().f
    };
 }
-
+impl AsRef<BigInt> for Zqf{
+    fn as_ref(&self) -> &BigInt {
+        &self.f
+    }
+}
+impl From<BigInt> for Zqf{
+    fn from(n: BigInt) -> Self {
+        Zqf{
+            f:n,
+        }
+    }
+}
+impl From<&BigInt> for Zqf{
+    fn from(n: &BigInt) -> Self {
+        Zqf{
+            f:n.clone(),
+        }
+    }
+}
+impl ToOwned for Zqf{
+    type Owned = BigInt;
+    fn to_owned(&self) -> Self::Owned {
+        self.f.clone()
+    }
+}
+impl Into<BigInt> for Zqf{
+    fn into(self) -> BigInt {
+        self.f
+    }
+}
 impl Zqf {
     fn get_divisor_exp_in_phi(divisor: &BigInt) -> u32 {
         let mut uint0 = Phi.clone();
@@ -72,14 +101,6 @@ impl Zqf {
 
     pub fn zero() -> Self {
         Zqf { f: BigInt::zero() }
-    }
-
-    pub fn from(n: &BigInt) -> Self {
-        Zqf { f: n.clone() }
-    }
-
-    pub fn to_big_int(&self) -> BigInt {
-        self.f.clone()
     }
 
     fn q() -> BigInt {
