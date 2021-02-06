@@ -85,7 +85,11 @@ impl Zeroize for Secp256k1Scalar {
         atomic::compiler_fence(atomic::Ordering::SeqCst);
     }
 }
-
+impl From<&BigInt> for Secp256k1Scalar{
+    fn from(n: &BigInt) -> Self {
+        <Self as ECScalar>::from(n)
+    }
+}
 impl ECScalar for Secp256k1Scalar {
     type SecretKey = SK;
 
