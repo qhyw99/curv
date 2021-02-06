@@ -42,11 +42,7 @@ pub static ref p:BigInt= {
        Zqf::get_random_from_z_phi().f
    };
 }
-impl AsRef<BigInt> for Zqf{
-    fn as_ref(&self) -> &BigInt {
-        &self.f
-    }
-}
+
 impl From<BigInt> for Zqf{
     fn from(n: BigInt) -> Self {
         Zqf{
@@ -61,10 +57,16 @@ impl From<&BigInt> for Zqf{
         }
     }
 }
-impl ToOwned for Zqf{
-    type Owned = BigInt;
-    fn to_owned(&self) -> Self::Owned {
-        self.f.clone()
+// Conflict with clone implementation
+// impl ToOwned for Zqf{
+//     type Owned = BigInt;
+//     fn to_owned(&self) -> Self::Owned {
+//         self.f.clone()
+//     }
+// }
+impl AsRef<BigInt> for Zqf{
+    fn as_ref(&self) -> &BigInt {
+        &self.f
     }
 }
 impl Into<BigInt> for Zqf{
@@ -73,6 +75,9 @@ impl Into<BigInt> for Zqf{
     }
 }
 impl Zqf {
+    pub fn to_big_int(&self) -> BigInt {
+        self.f.clone()
+    }
     fn get_divisor_exp_in_phi(divisor: &BigInt) -> u32 {
         let mut uint0 = Phi.clone();
         let mut i = 0;
@@ -182,7 +187,7 @@ mod tests {
         let zqf2 = BigInt::from(100u64);
         //let zqf3 = zqf1 * zqf2;
         let u = Zqf { f: zqf1 };
-        let v = u.pow(&zqf2);
+        let v = u.pow_mod_m(&zqf2);
         println!("{:?}", v);
 
         let gg = Zqf::get_element_order_without_small_divisor();
