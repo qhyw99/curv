@@ -14,6 +14,7 @@ pub mod sigma_dlog;
 pub mod sigma_ec_ddh;
 pub mod sigma_valid_pedersen;
 pub mod sigma_valid_pedersen_blind;
+pub mod sigma_dlog_eq;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ProofError;
