@@ -8,7 +8,9 @@
 // jubjub : https://z.cash/technology/jubjub/
 use std::fmt::Debug;
 use std::str;
+
 pub const SECRET_KEY_SIZE: usize = 32;
+
 use super::traits::{ECPoint, ECScalar};
 use crate::arithmetic::traits::Converter;
 use crate::cryptographic_primitives::hashing::hash_sha512::HSha512;
@@ -25,6 +27,7 @@ use serde::ser::{Serialize, Serializer};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
 use std::ops::{Add, Mul};
+
 pub type SK = Scalar;
 // We use G1 only
 pub type PK = G1Affine;
@@ -49,11 +52,13 @@ pub struct FieldScalar {
     purpose: &'static str,
     fe: SK,
 }
+
 #[derive(Clone, Copy)]
 pub struct G1Point {
     purpose: &'static str,
     ge: PK,
 }
+
 pub type GE = G1Point;
 pub type FE = FieldScalar;
 
@@ -217,8 +222,8 @@ impl<'o> Add<&'o FieldScalar> for FieldScalar {
 
 impl Serialize for FieldScalar {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         serializer.serialize_str(&self.to_big_int().to_hex())
     }
@@ -226,8 +231,8 @@ impl Serialize for FieldScalar {
 
 impl<'de> Deserialize<'de> for FieldScalar {
     fn deserialize<D>(deserializer: D) -> Result<FieldScalar, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         deserializer.deserialize_str(BLS12_381ScalarVisitor)
     }
@@ -270,6 +275,17 @@ impl Zeroize for G1Point {
         unsafe { ptr::write_volatile(self, GE::generator()) };
         atomic::fence(atomic::Ordering::SeqCst);
         atomic::compiler_fence(atomic::Ordering::SeqCst);
+    }
+}
+
+impl G1Point {
+    pub fn identity() -> Self {
+        G1Point {
+            purpose: "identity",
+            ge: PK::identity(),
+        }
+        // let zero_s = FieldScalar::zero();
+        // Self::generator() * zero_s
     }
 }
 
@@ -439,8 +455,8 @@ impl Hashable for G1Point {
 
 impl Serialize for G1Point {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let bytes = self.pk_to_key_slice();
         let bytes_as_bn = BigInt::from(&bytes[..]);
@@ -452,8 +468,8 @@ impl Serialize for G1Point {
 
 impl<'de> Deserialize<'de> for G1Point {
     fn deserialize<D>(deserializer: D) -> Result<G1Point, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         const FIELDS: &[&str] = &["bytes_str"];
         deserializer.deserialize_struct("JujubPoint", FIELDS, JubjubPointVisitor)
@@ -470,8 +486,8 @@ impl<'de> Visitor<'de> for JubjubPointVisitor {
     }
 
     fn visit_seq<V>(self, mut seq: V) -> Result<G1Point, V::Error>
-    where
-        V: SeqAccess<'de>,
+        where
+            V: SeqAccess<'de>,
     {
         let bytes_str = seq
             .next_element()?
@@ -644,6 +660,7 @@ mod tests {
 
         assert_eq!(a_inv_bn_1, a_inv_bn_2);
     }
+
     #[test]
     fn test_scalar_mul_multiply_by_1() {
         let g: GE = ECPoint::generator();
@@ -659,5 +676,21 @@ mod tests {
         let s_bn = s_a.to_big_int();
         let s_b: FE = ECScalar::from(&s_bn);
         assert_eq!(s_a, s_b);
+    }
+
+    #[test]
+    fn test_mul_identity() {
+        let s: FE = ECScalar::new_random();
+        let i = GE::identity();
+        let new_i = &i * &s;
+        assert_eq!(new_i,i);
+    }
+
+    #[test]
+    fn test_add_identity() {
+        let s: GE = ECPoint::generator();
+        let i = GE::identity();
+        let new_i = &i + &s;
+        assert_eq!(new_i,s);
     }
 }

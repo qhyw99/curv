@@ -58,11 +58,13 @@ pub struct Secp256k1Scalar {
     purpose: &'static str,
     fe: SK,
 }
+
 #[derive(Clone, Debug, Copy)]
 pub struct Secp256k1Point {
     purpose: &'static str,
     ge: PK,
 }
+
 pub type GE = Secp256k1Point;
 pub type FE = Secp256k1Scalar;
 
@@ -77,8 +79,7 @@ impl Secp256k1Point {
         }
     }
     pub fn one() -> Self {
-        let zero = BigInt::from(0);
-        let zero_s: <Secp256k1Point as ECPoint>::Scalar = (&zero).into();
+        let zero_s = Secp256k1Scalar::zero();
         Self::generator() * zero_s
     }
 }
@@ -90,11 +91,13 @@ impl Zeroize for Secp256k1Scalar {
         atomic::compiler_fence(atomic::Ordering::SeqCst);
     }
 }
-impl From<&BigInt> for Secp256k1Scalar{
+
+impl From<&BigInt> for Secp256k1Scalar {
     fn from(n: &BigInt) -> Self {
         <Self as ECScalar>::from(n)
     }
 }
+
 impl ECScalar for Secp256k1Scalar {
     type SecretKey = SK;
 
@@ -197,6 +200,7 @@ impl ECScalar for Secp256k1Scalar {
         ECScalar::from(&bn_inv)
     }
 }
+
 impl Mul<Secp256k1Scalar> for Secp256k1Scalar {
     type Output = Secp256k1Scalar;
     fn mul(self, other: Secp256k1Scalar) -> Secp256k1Scalar {
@@ -227,8 +231,8 @@ impl<'o> Add<&'o Secp256k1Scalar> for Secp256k1Scalar {
 
 impl Serialize for Secp256k1Scalar {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         serializer.serialize_str(&self.to_big_int().to_hex())
     }
@@ -236,8 +240,8 @@ impl Serialize for Secp256k1Scalar {
 
 impl<'de> Deserialize<'de> for Secp256k1Scalar {
     fn deserialize<D>(deserializer: D) -> Result<Secp256k1Scalar, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         deserializer.deserialize_str(Secp256k1ScalarVisitor)
     }
@@ -487,6 +491,7 @@ impl ECPoint for Secp256k1Point {
 }
 
 static mut CONTEXT: Option<Secp256k1<VerifyOnly>> = None;
+
 pub fn get_context() -> &'static Secp256k1<VerifyOnly> {
     static INIT_CONTEXT: Once = Once::new();
     INIT_CONTEXT.call_once(|| unsafe {
@@ -547,8 +552,8 @@ impl<'o> Add<&'o Secp256k1Point> for &'o Secp256k1Point {
 
 impl Serialize for Secp256k1Point {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let mut state = serializer.serialize_struct("Secp256k1Point", 2)?;
         state.serialize_field("x", &self.x_coor().unwrap().to_hex())?;
@@ -559,8 +564,8 @@ impl Serialize for Secp256k1Point {
 
 impl<'de> Deserialize<'de> for Secp256k1Point {
     fn deserialize<D>(deserializer: D) -> Result<Secp256k1Point, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         let fields = &["x", "y"];
         deserializer.deserialize_struct("Secp256k1Point", fields, Secp256k1PointVisitor)
@@ -577,8 +582,8 @@ impl<'de> Visitor<'de> for Secp256k1PointVisitor {
     }
 
     fn visit_seq<V>(self, mut seq: V) -> Result<Secp256k1Point, V::Error>
-    where
-        V: SeqAccess<'de>,
+        where
+            V: SeqAccess<'de>,
     {
         let x = seq
             .next_element()?
@@ -628,6 +633,12 @@ mod tests {
     use crate::elliptic::curves::traits::ECScalar;
     use bincode;
     use serde_json;
+
+    #[test]
+    fn generate_one() {
+        let one = Secp256k1Point::one();
+        println!("{:?}", one);
+    }
 
     #[test]
     fn serialize_sk() {
@@ -829,13 +840,13 @@ mod tests {
         hash = HSha256::create_hash(&[&hash]);
         hash = HSha256::create_hash(&[&hash]);
 
-        assert_eq!(hash, base_point2.x_coor().unwrap(),);
+        assert_eq!(hash, base_point2.x_coor().unwrap(), );
 
         // check that base_point2 is indeed on the curve (from_coor() will fail otherwise)
         assert_eq!(
             Secp256k1Point::from_coor(
                 &base_point2.x_coor().unwrap(),
-                &base_point2.y_coor().unwrap()
+                &base_point2.y_coor().unwrap(),
             ),
             base_point2
         );
