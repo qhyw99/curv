@@ -76,6 +76,9 @@ impl Secp256k1Point {
             ge: pk.get_element(),
         }
     }
+    pub fn one() -> Self {
+        Self::generator().scalar_mul(BigInt::from(0).into())
+    }
 }
 
 impl Zeroize for Secp256k1Scalar {
