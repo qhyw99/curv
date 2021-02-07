@@ -77,7 +77,9 @@ impl Secp256k1Point {
         }
     }
     pub fn one() -> Self {
-        Self::generator().scalar_mul(BigInt::from(0).into())
+        let zero = BigInt::from(0);
+        let zero_s: <Secp256k1Point as ECPoint>::Scalar = (&zero).into();
+        Self::generator() * zero_s
     }
 }
 
