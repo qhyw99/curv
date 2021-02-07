@@ -39,6 +39,7 @@ use crypto::digest::Digest;
 use crypto::sha3::Sha3;
 #[cfg(feature = "merkle")]
 use merkle::Hashable;
+use curve25519_dalek::traits::Identity;
 
 pub type SK = Scalar;
 pub type PK = CompressedRistretto;
@@ -251,7 +252,16 @@ impl Zeroize for RistrettoCurvPoint {
         atomic::compiler_fence(atomic::Ordering::SeqCst);
     }
 }
-
+impl RistrettoCurvPoint {
+    pub fn identity() -> Self {
+        RistrettoCurvPoint {
+            purpose: "identity",
+            ge: PK::identity(),
+        }
+        // let zero_s = FieldScalar::zero();
+        // Self::generator() * zero_s
+    }
+}
 impl ECPoint for RistrettoCurvPoint {
     type SecretKey = SK;
     type PublicKey = PK;
@@ -595,5 +605,21 @@ mod tests {
         ];
         let result = RistrettoCurvPoint::from_bytes(&test_vec);
         assert!(result.is_ok())
+    }
+
+    #[test]
+    fn test_mul_identity_ristretto() {
+        let s: FE = ECScalar::new_random();
+        let i = GE::identity();
+        let new_i = &i * &s;
+        assert_eq!(new_i,i);
+    }
+
+    #[test]
+    fn test_add_identity_ristretto() {
+        let s: GE = ECPoint::generator();
+        let i = GE::identity();
+        let new_i = &i + &s;
+        assert_eq!(new_i,s);
     }
 }
