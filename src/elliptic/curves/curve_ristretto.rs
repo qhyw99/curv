@@ -23,7 +23,7 @@ use serde::ser::SerializeStruct;
 use serde::ser::{Serialize, Serializer};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 use std::str;
 pub const SECRET_KEY_SIZE: usize = 32;
 pub const COOR_BYTE_SIZE: usize = 32;
@@ -425,6 +425,18 @@ impl<'o> Add<&'o RistrettoCurvPoint> for &'o RistrettoCurvPoint {
     }
 }
 
+impl<'o> Sub<&'o RistrettoCurvPoint> for RistrettoCurvPoint{
+    type Output = RistrettoCurvPoint;
+    fn sub(self,other: &'o RistrettoCurvPoint) ->RistrettoCurvPoint{
+        self.sub_point(&other.ge)
+    }
+}
+impl<'o> Sub<&'o RistrettoCurvPoint> for &'o RistrettoCurvPoint{
+    type Output = RistrettoCurvPoint;
+    fn sub(self,other: &'o RistrettoCurvPoint) ->RistrettoCurvPoint{
+        self.sub_point(&other.ge)
+    }
+}
 #[cfg(feature = "merkle")]
 impl Hashable for RistrettoCurvPoint {
     fn update_context(&self, context: &mut Sha3) {
@@ -619,7 +631,7 @@ mod tests {
     fn test_add_identity_ristretto() {
         let s: GE = ECPoint::generator();
         let i = GE::identity();
-        let new_i = &i + &s;
+        let new_i = &s - &i;
         assert_eq!(new_i,s);
     }
 }
