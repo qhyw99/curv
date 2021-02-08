@@ -193,6 +193,9 @@ mod tests {
         let gg = Zqf::get_element_order_without_small_divisor();
         println!("{:?}", &Phi.clone());
         println!("{:?}", gg);
+
+        let usize_length = M.bit_length();
+        println!("The usize_length is :{:?}...",usize_length);
         //assert_eq!(zqf3, BigInt::from(9900u64));
     }
 }
