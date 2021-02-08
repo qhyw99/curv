@@ -65,6 +65,12 @@ impl Zeroize for RistrettoScalar {
     }
 }
 
+impl From<&BigInt> for RistrettoScalar {
+    fn from(n: &BigInt) -> Self {
+        <Self as ECScalar>::from(n)
+    }
+}
+
 impl ECScalar for RistrettoScalar {
     type SecretKey = SK;
 
