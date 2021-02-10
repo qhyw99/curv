@@ -139,7 +139,13 @@ impl Zqg {
         Q.clone()
     }
 }
-
+impl From<&BigInt> for Zqg {
+    fn from(n: &BigInt) -> Self {
+        Zqg{
+            g: n.clone()
+        }
+    }
+}
 impl ECPoint for Zqg {
     type SecretKey = Zqf;
     type PublicKey = Zqg;
