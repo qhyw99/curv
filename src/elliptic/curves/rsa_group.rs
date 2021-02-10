@@ -2,6 +2,7 @@ use crate::arithmetic::traits::{Converter, Modulo, Samplable};
 use crate::{BigInt};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, Div, DivAssign};
 use std::ptr;
+use std::borrow::Borrow;
 
 #[derive(Clone, Debug)]
 pub struct Zqf {
@@ -127,6 +128,12 @@ impl Zqf {
     pub fn sqrt(&self) -> Self {
         Zqf{
             f: BigInt::sqrt(&self.f).mod_floor(&M),
+        }
+    }
+
+    pub fn square(&self) -> Self{
+        Zqf{
+            f: (self.f.borrow() * self.f.borrow()).mod_floor(&M)
         }
     }
     fn invert(&self) -> Self {
