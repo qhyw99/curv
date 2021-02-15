@@ -61,6 +61,11 @@ macro_rules! test_for_all_curves {
             fn [<$fn _p256>]() {
                 $fn::<crate::elliptic::curves::p256::GE>()
             }
+            #[test]
+            $($attrs)*
+            fn [<$fn _integer_group>]() {
+                $fn::<crate::elliptic::curves::integer_group::GE>()
+            }
         }
     };
 }

@@ -1,6 +1,7 @@
 use crate::arithmetic::traits::{Converter, Modulo, Samplable};
 use crate::elliptic::curves::traits::{ECPoint, ECScalar};
 use crate::{BigInt, ErrorKey};
+use super::rsa_group;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 use std::ptr;
 use std::sync::atomic;
@@ -23,13 +24,16 @@ pub struct Zqf {
 // let mut lbslice: [u8; 8] = [0xff as u8; 8];
 // lbslice[0] = 0x7f;
 lazy_static::lazy_static! {
-pub static ref Q:BigInt = {
-    let mut lbslice: [u8; 256] = [0xff as u8; 256];
-    lbslice[0] = 0x7f;
-    let mut lb = BigInt::from(&lbslice[..]);
-    lb = lb.nextprime();
-    lb
+   pub static ref Q:BigInt = {
+      rsa_group::M.clone()
    };
+   // {
+   //  let mut lbslice: [u8; 256] = [0xff as u8; 256];
+   //  lbslice[0] = 0x7f;
+   //  let mut lb = BigInt::from(&lbslice[..]);
+   //  lb = lb.nextprime();
+   //  lb
+   // };
 }
 pub type GE = Zqg;
 pub type FE = Zqf;
@@ -165,7 +169,7 @@ impl ECPoint for Zqg {
     }
 
     fn generator() -> Self {
-        Zqg { g: BigInt::one() }
+        Zqg { g: rsa_group::g.clone() }
     }
 
     fn get_element(&self) -> Self::PublicKey {
