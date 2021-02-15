@@ -37,7 +37,11 @@ lazy_static::lazy_static! {
 }
 pub type GE = Zqg;
 pub type FE = Zqf;
-
+impl From<&BigInt> for Zqf {
+    fn from(n: &BigInt) -> Self {
+        <Self as ECScalar>::from(n)
+    }
+}
 impl ECScalar for Zqf {
     type SecretKey = Zqf;
 
