@@ -25,6 +25,7 @@ use serde::{Deserialize, Deserializer};
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
 use std::str;
+
 pub const SECRET_KEY_SIZE: usize = 32;
 pub const COOR_BYTE_SIZE: usize = 32;
 pub const NUM_OF_COORDINATES: usize = 4;
@@ -49,11 +50,13 @@ pub struct RistrettoScalar {
     purpose: &'static str,
     fe: SK,
 }
+
 #[derive(Clone, Debug, Copy)]
 pub struct RistrettoCurvPoint {
     purpose: &'static str,
     ge: PK,
 }
+
 pub type GE = RistrettoCurvPoint;
 pub type FE = RistrettoScalar;
 
@@ -208,8 +211,8 @@ impl<'o> Add<&'o RistrettoScalar> for RistrettoScalar {
 
 impl Serialize for RistrettoScalar {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         serializer.serialize_str(&self.to_big_int().to_hex())
     }
@@ -217,8 +220,8 @@ impl Serialize for RistrettoScalar {
 
 impl<'de> Deserialize<'de> for RistrettoScalar {
     fn deserialize<D>(deserializer: D) -> Result<RistrettoScalar, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         deserializer.deserialize_str(Secp256k1ScalarVisitor)
     }
@@ -258,16 +261,16 @@ impl Zeroize for RistrettoCurvPoint {
         atomic::compiler_fence(atomic::Ordering::SeqCst);
     }
 }
+
 impl RistrettoCurvPoint {
     pub fn identity() -> Self {
         RistrettoCurvPoint {
             purpose: "identity",
             ge: PK::identity(),
         }
-        // let zero_s = FieldScalar::zero();
-        // Self::generator() * zero_s
     }
 }
+
 impl ECPoint for RistrettoCurvPoint {
     type SecretKey = SK;
     type PublicKey = PK;
@@ -431,18 +434,20 @@ impl<'o> Add<&'o RistrettoCurvPoint> for &'o RistrettoCurvPoint {
     }
 }
 
-impl<'o> Sub<&'o RistrettoCurvPoint> for RistrettoCurvPoint{
+impl<'o> Sub<&'o RistrettoCurvPoint> for RistrettoCurvPoint {
     type Output = RistrettoCurvPoint;
-    fn sub(self,other: &'o RistrettoCurvPoint) ->RistrettoCurvPoint{
+    fn sub(self, other: &'o RistrettoCurvPoint) -> RistrettoCurvPoint {
         self.sub_point(&other.ge)
     }
 }
-impl<'o> Sub<&'o RistrettoCurvPoint> for &'o RistrettoCurvPoint{
+
+impl<'o> Sub<&'o RistrettoCurvPoint> for &'o RistrettoCurvPoint {
     type Output = RistrettoCurvPoint;
-    fn sub(self,other: &'o RistrettoCurvPoint) ->RistrettoCurvPoint{
+    fn sub(self, other: &'o RistrettoCurvPoint) -> RistrettoCurvPoint {
         self.sub_point(&other.ge)
     }
 }
+
 #[cfg(feature = "merkle")]
 impl Hashable for RistrettoCurvPoint {
     fn update_context(&self, context: &mut Sha3) {
@@ -453,8 +458,8 @@ impl Hashable for RistrettoCurvPoint {
 
 impl Serialize for RistrettoCurvPoint {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let bytes = self.pk_to_key_slice();
         let bytes_as_bn = BigInt::from(&bytes[..]);
@@ -466,8 +471,8 @@ impl Serialize for RistrettoCurvPoint {
 
 impl<'de> Deserialize<'de> for RistrettoCurvPoint {
     fn deserialize<D>(deserializer: D) -> Result<RistrettoCurvPoint, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         const FIELDS: &[&str] = &["bytes_str"];
         deserializer.deserialize_struct("RistrettoCurvPoint", FIELDS, RistrettoCurvPointVisitor)
@@ -484,8 +489,8 @@ impl<'de> Visitor<'de> for RistrettoCurvPointVisitor {
     }
 
     fn visit_seq<V>(self, mut seq: V) -> Result<RistrettoCurvPoint, V::Error>
-    where
-        V: SeqAccess<'de>,
+        where
+            V: SeqAccess<'de>,
     {
         let bytes_str = seq
             .next_element()?
@@ -523,6 +528,7 @@ mod tests {
     use crate::elliptic::curves::traits::ECScalar;
     use crate::BigInt;
     use serde_json;
+    use std::borrow::Borrow;
 
     type GE = RistrettoCurvPoint;
     type FE = RistrettoScalar;
@@ -587,6 +593,7 @@ mod tests {
         ];
         GE::from_bytes(&scalar_bytes[..]).expect("bad encoding of point");
     }
+
     // this test fails once in a while.
     #[test]
     fn test_minus_point() {
@@ -630,7 +637,7 @@ mod tests {
         let s: FE = ECScalar::new_random();
         let i = GE::identity();
         let new_i = &i * &s;
-        assert_eq!(new_i,i);
+        assert_eq!(new_i, i);
     }
 
     #[test]
@@ -638,6 +645,30 @@ mod tests {
         let s: GE = ECPoint::generator();
         let i = GE::identity();
         let new_i = &s - &i;
-        assert_eq!(new_i,s);
+        assert_eq!(new_i, s);
+    }
+
+    #[test]
+    fn test_homo_arithmetic_add() {
+        let a = BigInt::from(133);
+        let b = BigInt::from(12);
+        let a_s: RistrettoScalar = a.borrow().into();
+        let b_s: RistrettoScalar = b.borrow().into();
+
+        let c_s = a_s + b_s;
+        let c = &a + &b;
+        assert_eq!(c, c_s.to_big_int())
+    }
+
+    #[test]
+    fn test_homo_arithmetic_mul() {
+        let a = BigInt::from(222);
+        let b = BigInt::from(478);
+        let a_s: RistrettoScalar = a.borrow().into();
+        let b_s: RistrettoScalar = b.borrow().into();
+
+        let c_s = a_s * b_s;
+        let c = &a * &b;
+        assert_eq!(c, c_s.to_big_int())
     }
 }
