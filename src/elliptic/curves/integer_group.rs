@@ -72,7 +72,7 @@ impl ECScalar for Zqf {
     }
 
     fn q() -> BigInt {
-        Q.clone()
+        rsa_group::Phi.clone()
     }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
@@ -168,7 +168,7 @@ impl ECPoint for Zqg {
 
     fn base_point2() -> Self {
         Zqg {
-            g: BigInt::from(13),
+            g: BigInt::from(1378),
         }
     }
 
@@ -296,6 +296,7 @@ mod tests {
     use crate::cryptographic_primitives::hashing::hash_sha256::HSha256;
     use crate::cryptographic_primitives::hashing::traits::Hash;
     use crate::BigInt;
+    use std::borrow::Borrow;
 
     #[test]
     fn test_zqf_mul() {
@@ -331,5 +332,41 @@ mod tests {
 
         println!("{:?} {:?}", result2, result3);
         assert_eq!(result2, result3);
+    }
+
+    #[test]
+    fn test_zqg_add(){
+        let a_inner = BigInt::from(2);
+        let a = Zqg::from(a_inner);
+        let b_inner = BigInt::from(4);
+        let b = Zqg::from(b_inner);
+        let c = a + b;
+
+        let c_0 = BigInt::from(8);
+        assert_eq!(c,Zqg::from(c_0))
+    }
+    #[test]
+    fn test_zqg_mul_scalar(){
+        let a_inner = BigInt::from(2).pow(50);
+        let a:Zqf = a_inner.borrow().into();
+        let b_inner = BigInt::from(7).pow(39);
+        let b:Zqf = b_inner.borrow().into();
+        let d_inner = BigInt::from(13);
+        let d:Zqf = d_inner.borrow().into();
+        let c = a * b + d;
+
+        let base = Zqg::generator();
+
+        let base_c = base.borrow() * c.borrow();
+
+        let a_0:Zqf = a_inner.borrow().into();
+        let b_0:Zqf = b_inner.borrow().into();
+        let d_0:Zqf = d_inner.borrow().into();
+
+        let base_left = base.borrow() * a_0.borrow();
+
+        let base_ab = base_left * b_0 + base * d_0;
+
+        assert_eq!(base_c,base_ab)
     }
 }
