@@ -211,20 +211,18 @@ impl ECPoint for Zqg {
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
         Zqg {
-            g: BigInt::mod_mul(&self.g, &fe.f, &Self::q()),
+            g: BigInt::mod_pow(&self.g, &fe.f, &Self::q()),
         }
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
         Zqg {
-            g: BigInt::mod_add(&self.g, &other.g, &Self::q()),
+            g: BigInt::mod_mul(&self.g, &other.g, &Self::q()),
         }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg {
-            g: BigInt::mod_sub(&self.g, &other.g, &Self::q()),
-        }
+        unimplemented!()
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
@@ -235,7 +233,7 @@ impl ECPoint for Zqg {
 impl Mul<Zqf> for Zqg {
     type Output = Zqg;
     fn mul(mut self, other: Zqf) -> Zqg {
-        self.g = BigInt::mod_mul(&self.g, &other.f, &Self::q());
+        self.g = BigInt::mod_pow(&self.g, &other.f, &Self::q());
         self
     }
 }
@@ -243,7 +241,7 @@ impl Mul<Zqf> for Zqg {
 impl<'o> Mul<&'o Zqf> for Zqg {
     type Output = Zqg;
     fn mul(mut self, other: &'o Zqf) -> Zqg {
-        self.g = BigInt::mod_mul(&self.g, &other.f, &Self::q());
+        self.g = BigInt::mod_pow(&self.g, &other.f, &Self::q());
         self
     }
 }
@@ -251,7 +249,7 @@ impl<'o> Mul<&'o Zqf> for Zqg {
 impl Add<Zqg> for Zqg {
     type Output = Zqg;
     fn add(mut self, other: Zqg) -> Zqg {
-        self.g = BigInt::mod_add(&self.g, &other.g, &Self::q());
+        self.g = BigInt::mod_mul(&self.g, &other.g, &Self::q());
         self
     }
 }
@@ -259,7 +257,7 @@ impl Add<Zqg> for Zqg {
 impl<'o> Add<&'o Zqg> for Zqg {
     type Output = Zqg;
     fn add(mut self, other: &'o Zqg) -> Zqg {
-        self.g = BigInt::mod_add(&self.g, &other.g, &Self::q());
+        self.g = BigInt::mod_mul(&self.g, &other.g, &Self::q());
         self
     }
 }
