@@ -7,13 +7,13 @@
 
 #[macro_use]
 extern crate serde_derive;
-extern crate lazy_static;
+pub extern crate lazy_static;
 
 pub mod elliptic;
 
 pub mod arithmetic;
 pub use crate::arithmetic::big_gmp::BigInt;
-
+//pub use lazy_static;
 pub mod cryptographic_primitives;
 
 #[derive(Copy, PartialEq, Eq, Clone, Debug)]
