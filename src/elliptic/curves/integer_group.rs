@@ -16,6 +16,21 @@ pub struct Zqg {
 pub struct Zqf {
     f: BigInt,
 }
+impl Copy for Zqg{
+
+}
+impl Copy for Zqf{
+
+}
+// impl Clone for Zqg{
+//     fn clone(&self) -> Self {
+//         unimplemented!()
+//     }
+//
+//     fn clone_from(&mut self, source: &Self) {
+//         unimplemented!()
+//     }
+// }
 //2048bit
 // let mut lbslice: [u8; 256] = [0xff as u8; 256];
 // lbslice[0] = 0x7f;
