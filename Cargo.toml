@@ -59,3 +59,9 @@ version = "0.14"
 bincode = "1.1"
 serde_json = "1.0"
 paste = "1.0.2"
+criterion = "0.2"
+
+[[bench]]
+name = "bench"
+path = "benches/bench.rs"
+harness = false

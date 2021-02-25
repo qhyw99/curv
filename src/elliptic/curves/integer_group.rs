@@ -7,12 +7,12 @@ use std::sync::atomic;
 use zeroize::Zeroize;
 use std::borrow::Borrow;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,Serialize, Deserialize)]
 pub struct Zqg {
     g: BigInt,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,Serialize, Deserialize)]
 pub struct Zqf {
     f: BigInt,
 }
