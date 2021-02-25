@@ -171,7 +171,13 @@ impl From<BigInt> for Zqg {
         }
     }
 }
-
+impl Zqg{
+    pub fn identity() -> Self {
+        Zqg {
+            g: BigInt::zero()
+        }
+    }
+}
 impl ECPoint for Zqg {
     type SecretKey = Zqf;
     type PublicKey = Zqg;
