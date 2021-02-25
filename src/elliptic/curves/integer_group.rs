@@ -50,6 +50,12 @@ pub static ref g_2:BigInt = {
 pub type GE = Zqg;
 pub type FE = Zqf;
 
+impl From<&BigInt> for Zqf {
+    fn from(n: &BigInt) -> Self {
+        <Self as ECScalar>::from(n)
+    }
+}
+
 impl ECScalar for Zqf {
     type SecretKey = Zqf;
 
@@ -292,6 +298,20 @@ impl<'o> Add<&'o Zqg> for &'o Zqg {
     type Output = Zqg;
     fn add(self, other: &'o Zqg) -> Zqg {
         self.add_point(&other.get_element())
+    }
+}
+
+impl<'o> Sub<&'o Zqg> for Zqg {
+    type Output = Zqg;
+    fn sub(self, other: &'o Zqg) -> Zqg {
+        self.sub_point(&other.ge)
+    }
+}
+
+impl<'o> Sub<&'o Zqg> for &'o Zqg {
+    type Output = Zqg;
+    fn sub(self, other: &'o Zqg) -> Zqg {
+        self.sub_point(&other.ge)
     }
 }
 
