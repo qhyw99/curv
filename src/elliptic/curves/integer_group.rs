@@ -304,14 +304,14 @@ impl<'o> Add<&'o Zqg> for &'o Zqg {
 impl<'o> Sub<&'o Zqg> for Zqg {
     type Output = Zqg;
     fn sub(self, other: &'o Zqg) -> Zqg {
-        self.sub_point(&other.ge)
+        self.sub_point(&other)
     }
 }
 
 impl<'o> Sub<&'o Zqg> for &'o Zqg {
     type Output = Zqg;
     fn sub(self, other: &'o Zqg) -> Zqg {
-        self.sub_point(&other.ge)
+        self.sub_point(&other)
     }
 }
 
