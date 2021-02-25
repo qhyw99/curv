@@ -1,11 +1,11 @@
 use crate::arithmetic::traits::{Converter, Modulo, Samplable};
 use crate::elliptic::curves::traits::{ECPoint, ECScalar};
 use crate::{BigInt, ErrorKey};
+use super::rsa_group;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 use std::ptr;
 use std::sync::atomic;
 use zeroize::Zeroize;
-use std::borrow::Borrow;
 
 #[derive(Clone, Debug)]
 pub struct Zqg {
@@ -24,23 +24,24 @@ pub struct Zqf {
 // let mut lbslice: [u8; 8] = [0xff as u8; 8];
 // lbslice[0] = 0x7f;
 lazy_static::lazy_static! {
-pub static ref Q:BigInt = {
-    let mut lbslice: [u8; 256] = [0xff as u8; 256];
-    lbslice[0] = 0x7f;
-    let mut lb = BigInt::from(&lbslice[..]);
-    lb = lb.nextprime();
-    lb
+   pub static ref Q:BigInt = {
+      rsa_group::M.clone()
    };
-pub static ref g:BigInt = {
-    BigInt::sample_below(Q.borrow())
-   };
-pub static ref g_2:BigInt = {
-    BigInt::mod_add(g.borrow(),BigInt::sample_below(Q.borrow()).borrow(),Q.borrow())
-   };
+   // {
+   //  let mut lbslice: [u8; 256] = [0xff as u8; 256];
+   //  lbslice[0] = 0x7f;
+   //  let mut lb = BigInt::from(&lbslice[..]);
+   //  lb = lb.nextprime();
+   //  lb
+   // };
 }
 pub type GE = Zqg;
 pub type FE = Zqf;
-
+impl From<&BigInt> for Zqf {
+    fn from(n: &BigInt) -> Self {
+        <Self as ECScalar>::from(n)
+    }
+}
 impl ECScalar for Zqf {
     type SecretKey = Zqf;
 
@@ -71,7 +72,7 @@ impl ECScalar for Zqf {
     }
 
     fn q() -> BigInt {
-        Q.clone()
+        rsa_group::Phi.clone()
     }
 
     fn add(&self, other: &Self::SecretKey) -> Self {
@@ -146,23 +147,20 @@ impl Zqg {
         Q.clone()
     }
 }
-
 impl From<&BigInt> for Zqg {
     fn from(n: &BigInt) -> Self {
-        Zqg {
+        Zqg{
             g: n.clone()
         }
     }
 }
-
 impl From<BigInt> for Zqg {
     fn from(n: BigInt) -> Self {
-        Zqg {
+        Zqg{
             g: n
         }
     }
 }
-
 impl ECPoint for Zqg {
     type SecretKey = Zqf;
     type PublicKey = Zqg;
@@ -170,12 +168,12 @@ impl ECPoint for Zqg {
 
     fn base_point2() -> Self {
         Zqg {
-            g: g_2.clone(),
+            g: BigInt::from(1378),
         }
     }
 
     fn generator() -> Self {
-        Zqg { g: g.clone() }
+        Zqg { g: rsa_group::g.clone() }
     }
 
     fn get_element(&self) -> Self::PublicKey {
@@ -213,20 +211,18 @@ impl ECPoint for Zqg {
 
     fn scalar_mul(&self, fe: &Self::SecretKey) -> Self {
         Zqg {
-            g: BigInt::mod_mul(&self.g, &fe.f, &Self::q()),
+            g: BigInt::mod_pow(&self.g, &fe.f, &Self::q()),
         }
     }
 
     fn add_point(&self, other: &Self::PublicKey) -> Self {
         Zqg {
-            g: BigInt::mod_add(&self.g, &other.g, &Self::q()),
+            g: BigInt::mod_mul(&self.g, &other.g, &Self::q()),
         }
     }
 
     fn sub_point(&self, other: &Self::PublicKey) -> Self {
-        Zqg {
-            g: BigInt::mod_sub(&self.g, &other.g, &Self::q()),
-        }
+        unimplemented!()
     }
 
     fn from_coor(x: &BigInt, y: &BigInt) -> Self {
@@ -237,7 +233,7 @@ impl ECPoint for Zqg {
 impl Mul<Zqf> for Zqg {
     type Output = Zqg;
     fn mul(mut self, other: Zqf) -> Zqg {
-        self.g = BigInt::mod_mul(&self.g, &other.f, &Self::q());
+        self.g = BigInt::mod_pow(&self.g, &other.f, &Self::q());
         self
     }
 }
@@ -245,7 +241,7 @@ impl Mul<Zqf> for Zqg {
 impl<'o> Mul<&'o Zqf> for Zqg {
     type Output = Zqg;
     fn mul(mut self, other: &'o Zqf) -> Zqg {
-        self.g = BigInt::mod_mul(&self.g, &other.f, &Self::q());
+        self.g = BigInt::mod_pow(&self.g, &other.f, &Self::q());
         self
     }
 }
@@ -253,7 +249,7 @@ impl<'o> Mul<&'o Zqf> for Zqg {
 impl Add<Zqg> for Zqg {
     type Output = Zqg;
     fn add(mut self, other: Zqg) -> Zqg {
-        self.g = BigInt::mod_add(&self.g, &other.g, &Self::q());
+        self.g = BigInt::mod_mul(&self.g, &other.g, &Self::q());
         self
     }
 }
@@ -261,7 +257,7 @@ impl Add<Zqg> for Zqg {
 impl<'o> Add<&'o Zqg> for Zqg {
     type Output = Zqg;
     fn add(mut self, other: &'o Zqg) -> Zqg {
-        self.g = BigInt::mod_add(&self.g, &other.g, &Self::q());
+        self.g = BigInt::mod_mul(&self.g, &other.g, &Self::q());
         self
     }
 }
@@ -300,6 +296,7 @@ mod tests {
     use crate::cryptographic_primitives::hashing::hash_sha256::HSha256;
     use crate::cryptographic_primitives::hashing::traits::Hash;
     use crate::BigInt;
+    use std::borrow::Borrow;
 
     #[test]
     fn test_zqf_mul() {
@@ -335,5 +332,41 @@ mod tests {
 
         println!("{:?} {:?}", result2, result3);
         assert_eq!(result2, result3);
+    }
+
+    #[test]
+    fn test_zqg_add(){
+        let a_inner = BigInt::from(2);
+        let a = Zqg::from(a_inner);
+        let b_inner = BigInt::from(4);
+        let b = Zqg::from(b_inner);
+        let c = a + b;
+
+        let c_0 = BigInt::from(8);
+        assert_eq!(c,Zqg::from(c_0))
+    }
+    #[test]
+    fn test_zqg_mul_scalar(){
+        let a_inner = BigInt::from(2).pow(50);
+        let a:Zqf = a_inner.borrow().into();
+        let b_inner = BigInt::from(7).pow(39);
+        let b:Zqf = b_inner.borrow().into();
+        let d_inner = BigInt::from(13);
+        let d:Zqf = d_inner.borrow().into();
+        let c = a * b + d;
+
+        let base = Zqg::generator();
+
+        let base_c = base.borrow() * c.borrow();
+
+        let a_0:Zqf = a_inner.borrow().into();
+        let b_0:Zqf = b_inner.borrow().into();
+        let d_0:Zqf = d_inner.borrow().into();
+
+        let base_left = base.borrow() * a_0.borrow();
+
+        let base_ab = base_left * b_0 + base * d_0;
+
+        assert_eq!(base_c,base_ab)
     }
 }
