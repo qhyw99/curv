@@ -10,7 +10,7 @@ pub struct Zqf {
 }
 lazy_static::lazy_static! {
 pub static ref p:BigInt= {
-    let mut lbslice: [u8; 8] = [0xff as u8; 8];
+    let mut lbslice: [u8; 64] = [0xff as u8; 64];
     lbslice[0] = 0x7f;
     let modlus = BigInt::from(4);
     let target = BigInt::from(3);
@@ -44,20 +44,22 @@ pub static ref p:BigInt= {
    };
 }
 
-impl From<BigInt> for Zqf{
+impl From<BigInt> for Zqf {
     fn from(n: BigInt) -> Self {
-        Zqf{
-            f:n,
+        Zqf {
+            f: n,
         }
     }
 }
-impl From<&BigInt> for Zqf{
+
+impl From<&BigInt> for Zqf {
     fn from(n: &BigInt) -> Self {
-        Zqf{
-            f:n.clone(),
+        Zqf {
+            f: n.clone(),
         }
     }
 }
+
 // Conflict with clone implementation
 // impl ToOwned for Zqf{
 //     type Owned = BigInt;
@@ -65,16 +67,18 @@ impl From<&BigInt> for Zqf{
 //         self.f.clone()
 //     }
 // }
-impl AsRef<BigInt> for Zqf{
+impl AsRef<BigInt> for Zqf {
     fn as_ref(&self) -> &BigInt {
         &self.f
     }
 }
-impl Into<BigInt> for Zqf{
+
+impl Into<BigInt> for Zqf {
     fn into(self) -> BigInt {
         self.f
     }
 }
+
 impl Zqf {
     pub fn to_big_int(&self) -> BigInt {
         self.f.clone()
@@ -126,12 +130,12 @@ impl Zqf {
     }
 
     pub fn sqrt(&self) -> Self {
-        Zqf{
-            f: BigInt::root(&self.f,2).mod_floor(&M),
+        Zqf {
+            f: BigInt::root(&self.f, 2).mod_floor(&M),
         }
     }
 
-    pub fn square(&self) -> Self{
+    pub fn square(&self) -> Self {
         let pow = BigInt::from(2);
         self.pow_mod_m(pow.borrow())
     }
@@ -201,35 +205,41 @@ mod tests {
         println!("{:?}", gg);
 
         let usize_length = M.bit_length();
-        println!("The usize_length is :{:?}...",usize_length);
+        println!("The usize_length is :{:?}...", usize_length);
         //assert_eq!(zqf3, BigInt::from(9900u64));
     }
 
     #[test]
-    fn test_group_order(){
+    fn test_group_order() {
         let generator = Zqf::from(g.clone());
         let one = generator.pow_mod_m(Phi.borrow());
         let one_b = BigInt::from(1);
-        assert_eq!(one.to_big_int(),one_b)
+        assert_eq!(one.to_big_int(), one_b)
     }
 
     #[test]
-    fn test_bigint_sqrt(){
+    fn test_bigint_sqrt() {
         let a = BigInt::from(2);
         let b = BigInt::from(4);
-        assert_eq!(a,b.sqrt())
+        assert_eq!(a, b.sqrt())
     }
 
     #[test]
-    fn test_sqrt(){
+    fn test_M_length() {
+        let length = M.clone().bit_length() + 1;
+        assert_eq!(length, 1024)
+    }
+
+    #[test]
+    fn test_sqrt() {
         let k = 10;
         let generator = Zqf::from(g.clone());
 
         let base = Zqf::from(&BigInt::from(2));
         let exp0 = BigInt::from(2_u64.pow(k - 1));
         let exp1 = BigInt::from(2_u64.pow(k));
-        let exp1_0 = BigInt::from(2_u64.pow(k)-2);
-        let exp1_1 = BigInt::from(2_u64.pow(k)-1);
+        let exp1_0 = BigInt::from(2_u64.pow(k) - 2);
+        let exp1_1 = BigInt::from(2_u64.pow(k) - 1);
         let a_0 = base.pow_mod_phi(&exp0);
         let a_1 = base.pow_mod_phi(&exp1);
         let a_1_0 = base.pow_mod_phi(&exp1_0);
@@ -242,7 +252,7 @@ mod tests {
 
         let m_0 = generator.pow_mod_m(a_1_0.as_ref());
 
-        assert_eq!(m_0.square().to_big_int(),m_1.to_big_int());
-        assert_eq!(m_1.square().to_big_int(),u_1.to_big_int());
+        assert_eq!(m_0.square().to_big_int(), m_1.to_big_int());
+        assert_eq!(m_1.square().to_big_int(), u_1.to_big_int());
     }
 }
