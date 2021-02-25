@@ -16,12 +16,6 @@ pub struct Zqg {
 pub struct Zqf {
     f: BigInt,
 }
-impl Copy for Zqg{
-
-}
-impl Copy for Zqf{
-
-}
 // impl Clone for Zqg{
 //     fn clone(&self) -> Self {
 //         unimplemented!()
