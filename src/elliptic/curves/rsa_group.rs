@@ -10,7 +10,7 @@ pub struct Zqf {
 }
 lazy_static::lazy_static! {
 pub static ref p:BigInt= {
-    let mut lbslice: [u8; 128] = [0xff as u8; 128];
+    let mut lbslice: [u8; 64] = [0xff as u8; 64];
     lbslice[0] = 0x7f;
     let modlus = BigInt::from(4);
     let target = BigInt::from(3);
