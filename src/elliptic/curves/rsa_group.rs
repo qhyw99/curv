@@ -10,7 +10,7 @@ pub struct Zqf {
 }
 lazy_static::lazy_static! {
 pub static ref p:BigInt= {
-    let mut lbslice: [u8; 16] = [0xff as u8; 16];
+    let mut lbslice: [u8; 128] = [0xff as u8; 128];
     lbslice[0] = 0x7f;
     let modlus = BigInt::from(4);
     let target = BigInt::from(3);
@@ -226,8 +226,11 @@ mod tests {
 
     #[test]
     fn test_M_length() {
+        use crate::elliptic::curves::integer_group;
         let length = M.clone().bit_length() + 1;
-        assert_eq!(length, 256)
+        assert_eq!(length, 2048);
+        let i = integer_group::Q.clone();
+        assert!(i > M.clone())
     }
 
     #[test]
