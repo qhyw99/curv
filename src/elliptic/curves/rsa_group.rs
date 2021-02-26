@@ -10,7 +10,7 @@ pub struct Zqf {
 }
 lazy_static::lazy_static! {
 pub static ref p:BigInt= {
-    let mut lbslice: [u8; 64] = [0xff as u8; 64];
+    let mut lbslice: [u8; 16] = [0xff as u8; 16];
     lbslice[0] = 0x7f;
     let modlus = BigInt::from(4);
     let target = BigInt::from(3);
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn test_M_length() {
         let length = M.clone().bit_length() + 1;
-        assert_eq!(length, 1024)
+        assert_eq!(length, 256)
     }
 
     #[test]
